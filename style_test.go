@@ -9,13 +9,13 @@ func fn(name string) func(string) string {
 }
 
 var testConfig = &Config{
-	configSequences: configSequences{
-		SeqDH: "[DH]",
-		SeqHL: "[HL]",
-		SeqLI: "[LI]",
-		SeqLL: "[LL]",
+	ConfigGenerators: ConfigGenerators{
+		GenDH: repeater("[DH]"),
+		GenHL: repeater("[HL]"),
+		GenLI: literal("[LI]"),
+		GenLL: literal("[LL]"),
 	},
-	configColours: configColours{
+	ConfigColours: ConfigColours{
 		HC: fn("HC"),
 		LC: fn("LC"),
 		BC: fn("BC"),

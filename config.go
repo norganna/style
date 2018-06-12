@@ -9,37 +9,43 @@ import (
 
 // Config represents the desired configuration for the styling engine.
 type Config struct {
-	configSequences
-	configColours
+	ConfigSequences
+	ConfigGenerators
+	ConfigColours
 }
 
-type configSequences struct {
-	// SeqDH is the Double Header line character sequence.
-	SeqDH string
-	// SeqHL is the Header Line character sequence.
-	SeqHL string
-	// SeqLI is the List Item character sequence.
-	SeqLI string
-	// SeqLL is the Last List item character sequence.
-	SeqLL string
-
+// ConfigSequences define the starting and ending sequences for tag matching.
+type ConfigSequences struct {
 	// SeqStart is the starting sequence for tag matching.
 	SeqStart []rune
 	// SeqEnd is the ending sequence for tag matching.
 	SeqEnd []rune
 }
 
-type configColours struct {
+// ConfigGenerators define a set of manipulators for sequence generation.
+type ConfigGenerators struct {
+	// GenDH is the Double Header line character sequence.
+	GenDH NumericStringManipulator
+	// GenHL is the Header Line character sequence.
+	GenHL NumericStringManipulator
+	// GenLI is the List Item character sequence.
+	GenLI StringManipulator
+	// GenLL is the Last List item character sequence.
+	GenLL StringManipulator
+}
+
+// ConfigColours define a set of manipulators for text colourisation.
+type ConfigColours struct {
 	// Header Colour function
-	HC func(string) string
+	HC StringManipulator
 	// List Colour function
-	LC func(string) string
+	LC StringManipulator
 	// Bold Colour function
-	BC func(string) string
+	BC StringManipulator
 	// Italic Colour function
-	IC func(string) string
+	IC StringManipulator
 	// Error Colour function
-	EC func(string) string
+	EC StringManipulator
 }
 
 // TagSequence allows you to set the tag characters for the given Style.
@@ -86,26 +92,26 @@ func (c *Config) Error(msg string) error {
 // StripColor returns a copy of the config without color functionality.
 func (c *Config) StripColor() *Config {
 	return &Config{
-		configSequences: c.configSequences,
+		ConfigGenerators: c.ConfigGenerators,
 	}
 }
 
 // DH double header line
-func (c *Config) DH(n int) string {
-	return c.LC(strings.Repeat(c.SeqDH, n))
+func (c *Config) DH(n int, text string) string {
+	return c.LC(c.GenDH(n, text))
 }
 
 // HL header line
-func (c *Config) HL(n int) string {
-	return c.LC(strings.Repeat(c.SeqHL, n))
+func (c *Config) HL(n int, text string) string {
+	return c.LC(c.GenHL(n, text))
 }
 
 // LI list item
-func (c *Config) LI(last bool) string {
+func (c *Config) LI(text string, last bool) string {
 	if last {
-		return c.LC(c.SeqLL)
+		return c.LC(c.GenLL(text))
 	}
-	return c.LC(c.SeqLI)
+	return c.LC(c.GenLI(text))
 }
 
 // Style applies style tags to the given string for this config.
@@ -127,16 +133,16 @@ func (c *Config) Style(text string) string {
 		n, _ := strconv.Atoi(body)
 		switch strings.ToUpper(fn) {
 		case "DH", "DHL":
-			body = c.DH(n)
+			body = c.DH(n, body)
 		case "HL", "HR":
-			body = c.HL(n)
+			body = c.HL(n, body)
 		case "LI", "LINE":
-			body = c.LI(false)
-		case "LL", "LLI":
-			body = c.LI(true)
+			body = c.LI(body, false)
+		case "LL", "LLI", "LLINE":
+			body = c.LI(body, true)
 		case "HC", "HEAD":
 			body = c.HC(body)
-		case "LC":
+		case "L", "LC":
 			body = c.LC(body)
 		case "B", "BC", "BOLD":
 			body = c.BC(body)
@@ -145,7 +151,7 @@ func (c *Config) Style(text string) string {
 		case "E", "EC", "ERR", "ERROR":
 			body = c.EC(body)
 		default:
-			body = "<%!:" + fn + ">"
+			body = "<%!:" + fn + ":" + body + ">"
 		}
 
 		text = string(input[0:sp])

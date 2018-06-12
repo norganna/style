@@ -1,9 +1,17 @@
 package style
 
 import (
+	"strings"
+
 	"github.com/mgutz/ansi"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+// StringManipulator is a type of function that takes a string and transforms it.
+type StringManipulator func(string) string
+
+// NumericStringManipulator is a type of function that takes a number and a string and transforms it.
+type NumericStringManipulator func(int, string) string
 
 var (
 	defaultStart = []rune{'‹'}
@@ -14,16 +22,28 @@ func init() {
 	DefaultStyle(Box(), ASCII())
 }
 
+func repeater(s string) NumericStringManipulator {
+	return func(n int, _ string) string {
+		return strings.Repeat(s, n)
+	}
+}
+
+func literal(s string) StringManipulator {
+	return func(msg string) string {
+		return s + msg
+	}
+}
+
 // Box implements a colourised box drawing configuration.
 func Box() Config {
 	return Config{
-		configSequences: configSequences{
-			SeqDH: "═",
-			SeqHL: "━",
-			SeqLI: "┣╸",
-			SeqLL: "┗╸",
+		ConfigGenerators: ConfigGenerators{
+			GenDH: repeater("═"),
+			GenHL: repeater("━"),
+			GenLI: literal("┣╸"),
+			GenLL: literal("┗╸"),
 		},
-		configColours: configColours{
+		ConfigColours: ConfigColours{
 			HC: ansi.ColorFunc("green+b"),
 			LC: ansi.ColorFunc("green"),
 			BC: ansi.ColorFunc("cyan+b"),
@@ -36,13 +56,13 @@ func Box() Config {
 // Bullet implements a colourised bulletised configuration.
 func Bullet() Config {
 	return Config{
-		configSequences: configSequences{
-			SeqDH: "—",
-			SeqHL: "–",
-			SeqLI: "• ",
-			SeqLL: "• ",
+		ConfigGenerators: ConfigGenerators{
+			GenDH: repeater("—"),
+			GenHL: repeater("–"),
+			GenLI: literal("• "),
+			GenLL: literal("• "),
 		},
-		configColours: configColours{
+		ConfigColours: ConfigColours{
 			HC: ansi.ColorFunc("green+b"),
 			LC: ansi.ColorFunc("green"),
 			BC: ansi.ColorFunc("cyan+b"),
@@ -55,13 +75,13 @@ func Bullet() Config {
 // ASCII returns an uncoloured ascii art driven configuration.
 func ASCII() Config {
 	return Config{
-		configSequences: configSequences{
-			SeqDH: "=",
-			SeqHL: "-",
-			SeqLI: "|-",
-			SeqLL: "`-",
+		ConfigGenerators: ConfigGenerators{
+			GenDH: repeater("="),
+			GenHL: repeater("-"),
+			GenLI: literal("|-"),
+			GenLL: literal("`-"),
 		},
-		configColours: configColours{
+		ConfigColours: ConfigColours{
 			HC: NC,
 			LC: NC,
 			BC: NC,
@@ -121,18 +141,18 @@ func Error(msg string) error {
 }
 
 // DH double header line
-func DH(n int) string {
-	return defaultStyle.DH(n)
+func DH(n int, text string) string {
+	return defaultStyle.DH(n, text)
 }
 
 // HL header line
-func HL(n int) string {
-	return defaultStyle.HL(n)
+func HL(n int, text string) string {
+	return defaultStyle.HL(n, text)
 }
 
 // LI list item
-func LI(last bool) string {
-	return defaultStyle.LI(last)
+func LI(text string, last bool) string {
+	return defaultStyle.LI(text, last)
 }
 
 // LC line coloured
