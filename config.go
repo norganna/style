@@ -85,6 +85,13 @@ func (c *Config) LI(last bool) string {
 
 // Style applies style tags to the given string for this config.
 func (c *Config) Style(text string) string {
+	if len(c.SeqStart) == 0 {
+		c.SeqStart = defaultStart
+	}
+	if len(c.SeqEnd) == 0 {
+		c.SeqEnd = defaultEnd
+	}
+
 	for {
 		input := []rune(text)
 		sp, ep, fn, body := findSequence(c.SeqStart, c.SeqEnd, input)

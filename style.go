@@ -5,6 +5,11 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+var (
+	defaultStart = []rune{'‹'}
+	defaultEnd = []rune{'›'}
+)
+
 func init() {
 	DefaultStyle(Box(), ASCII())
 }
