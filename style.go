@@ -7,7 +7,7 @@ import (
 
 var (
 	defaultStart = []rune{'‹'}
-	defaultEnd = []rune{'›'}
+	defaultEnd   = []rune{'›'}
 )
 
 func init() {
@@ -17,48 +17,57 @@ func init() {
 // Box implements a colourised box drawing configuration.
 func Box() Config {
 	return Config{
-		SeqDH: "═",
-		SeqHL: "━",
-		SeqLI: "┣╸",
-		SeqLL: "┗╸",
-
-		HC: ansi.ColorFunc("green+b"),
-		LC: ansi.ColorFunc("green"),
-		BC: ansi.ColorFunc("cyan+b"),
-		IC: ansi.ColorFunc("yellow+h"),
-		EC: ansi.ColorFunc("red+h"),
+		configSequences: configSequences{
+			SeqDH: "═",
+			SeqHL: "━",
+			SeqLI: "┣╸",
+			SeqLL: "┗╸",
+		},
+		configColours: configColours{
+			HC: ansi.ColorFunc("green+b"),
+			LC: ansi.ColorFunc("green"),
+			BC: ansi.ColorFunc("cyan+b"),
+			IC: ansi.ColorFunc("yellow+h"),
+			EC: ansi.ColorFunc("red+h"),
+		},
 	}
 }
 
 // Bullet implements a colourised bulletised configuration.
 func Bullet() Config {
 	return Config{
-		SeqDH: "—",
-		SeqHL: "–",
-		SeqLI: "• ",
-		SeqLL: "• ",
-
-		HC: ansi.ColorFunc("green+b"),
-		LC: ansi.ColorFunc("green"),
-		BC: ansi.ColorFunc("cyan+b"),
-		IC: ansi.ColorFunc("yellow+h"),
-		EC: ansi.ColorFunc("red+h"),
+		configSequences: configSequences{
+			SeqDH: "—",
+			SeqHL: "–",
+			SeqLI: "• ",
+			SeqLL: "• ",
+		},
+		configColours: configColours{
+			HC: ansi.ColorFunc("green+b"),
+			LC: ansi.ColorFunc("green"),
+			BC: ansi.ColorFunc("cyan+b"),
+			IC: ansi.ColorFunc("yellow+h"),
+			EC: ansi.ColorFunc("red+h"),
+		},
 	}
 }
 
 // ASCII returns an uncoloured ascii art driven configuration.
 func ASCII() Config {
 	return Config{
-		SeqDH: "=",
-		SeqHL: "-",
-		SeqLI: "|-",
-		SeqLL: "`-",
-
-		HC: NC,
-		LC: NC,
-		BC: NC,
-		IC: NC,
-		EC: NC,
+		configSequences: configSequences{
+			SeqDH: "=",
+			SeqHL: "-",
+			SeqLI: "|-",
+			SeqLL: "`-",
+		},
+		configColours: configColours{
+			HC: NC,
+			LC: NC,
+			BC: NC,
+			IC: NC,
+			EC: NC,
+		},
 	}
 }
 
@@ -99,6 +108,16 @@ func Printlnf(format string, a ...interface{}) {
 // Sprintf is analogous to fmt.Sprintf but with Style tags.
 func Sprintf(format string, a ...interface{}) string {
 	return defaultStyle.Sprintf(format, a...)
+}
+
+// Errorf is a analogous to fmt.Errorf with color tags removed.
+func Errorf(format string, a ...interface{}) error {
+	return defaultStyle.Errorf(format, a...)
+}
+
+// Error is a shortcut to errors.New with color tags removed.
+func Error(msg string) error {
+	return defaultStyle.Error(msg)
 }
 
 // DH double header line

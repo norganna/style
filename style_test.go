@@ -9,15 +9,19 @@ func fn(name string) func(string) string {
 }
 
 var testConfig = &Config{
-	SeqDH: "[DH]",
-	SeqHL: "[HL]",
-	SeqLI: "[LI]",
-	SeqLL: "[LL]",
-	HC:    fn("HC"),
-	LC:    fn("LC"),
-	BC:    fn("BC"),
-	IC:    fn("IC"),
-	EC:    fn("EC"),
+	configSequences: configSequences{
+		SeqDH: "[DH]",
+		SeqHL: "[HL]",
+		SeqLI: "[LI]",
+		SeqLL: "[LL]",
+	},
+	configColours: configColours{
+		HC: fn("HC"),
+		LC: fn("LC"),
+		BC: fn("BC"),
+		IC: fn("IC"),
+		EC: fn("EC"),
+	},
 }
 
 func Test_Style(t *testing.T) {

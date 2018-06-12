@@ -1,6 +1,7 @@
 package style
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,6 +9,11 @@ import (
 
 // Config represents the desired configuration for the styling engine.
 type Config struct {
+	configSequences
+	configColours
+}
+
+type configSequences struct {
 	// SeqDH is the Double Header line character sequence.
 	SeqDH string
 	// SeqHL is the Header Line character sequence.
@@ -17,6 +23,13 @@ type Config struct {
 	// SeqLL is the Last List item character sequence.
 	SeqLL string
 
+	// SeqStart is the starting sequence for tag matching.
+	SeqStart []rune
+	// SeqEnd is the ending sequence for tag matching.
+	SeqEnd []rune
+}
+
+type configColours struct {
 	// Header Colour function
 	HC func(string) string
 	// List Colour function
@@ -27,11 +40,6 @@ type Config struct {
 	IC func(string) string
 	// Error Colour function
 	EC func(string) string
-
-	// SeqStart is the starting sequence for tag matching.
-	SeqStart []rune
-	// SeqEnd is the ending sequence for tag matching.
-	SeqEnd []rune
 }
 
 // TagSequence allows you to set the tag characters for the given Style.
@@ -63,6 +71,23 @@ func (c *Config) Printlnf(format string, a ...interface{}) {
 // Sprintf is analogous to fmt.Sprintf but with Style tags.
 func (c *Config) Sprintf(format string, a ...interface{}) string {
 	return c.Style(fmt.Sprintf(format, a...))
+}
+
+// Errorf is an analogous to fmt.Errorf with color tags removed.
+func (c *Config) Errorf(format string, a ...interface{}) error {
+	return errors.New(c.StripColor().Style(fmt.Sprintf(format, a...)))
+}
+
+// Error is a shortcut to errors.New with color tags removed.
+func (c *Config) Error(msg string) error {
+	return errors.New(c.StripColor().Style(msg))
+}
+
+// StripColor returns a copy of the config without color functionality.
+func (c *Config) StripColor() *Config {
+	return &Config{
+		configSequences: c.configSequences,
+	}
 }
 
 // DH double header line
