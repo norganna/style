@@ -22,13 +22,66 @@ func init() {
 	DefaultStyle(Box(), ASCII())
 }
 
-func repeater(s string) NumericStringManipulator {
-	return func(n int, _ string) string {
-		return strings.Repeat(s, n)
+// Repeater creates a repeating string fill function.
+func Repeater(s string) NumericStringManipulator {
+	if len(s) < 1 {
+		s = " "
+	}
+
+	return func(n int, text string) string {
+		fill := []rune(strings.Repeat(s, n))
+		out := make([]rune, n)
+		copy(out, fill[0:n])
+
+		if text == "" {
+			return string(out)
+		}
+
+		chars := []rune(text)
+		var align int
+		switch chars[0] {
+		case '>': // Right align
+			chars = chars[1:]
+			align = 2
+
+		case '|': // Center align
+			chars = chars[1:]
+			align = 1
+
+		case '<': // left align (default)
+			chars = chars[1:]
+		}
+
+		l := len(chars)
+		if l > n {
+			copy(out[0:n-1], chars[0:n-1])
+			out[n-1] = '…'
+		} else {
+			switch align {
+			case 0:
+				copy(out[0:l], chars)
+			case 1:
+				s := (n - l) / 2
+				copy(out[s:s+l], chars)
+			case 2:
+				copy(out[n-l:], chars)
+			}
+		}
+
+		if s != " " {
+			for i, c := range out {
+				if c == ' ' {
+					out[i] = fill[i]
+				}
+			}
+		}
+
+		return string(out)
 	}
 }
 
-func literal(s string) StringManipulator {
+// Literal creates a fixed string prepend function.
+func Literal(s string) StringManipulator {
 	return func(msg string) string {
 		return s + msg
 	}
@@ -38,10 +91,11 @@ func literal(s string) StringManipulator {
 func Box() Config {
 	return Config{
 		ConfigGenerators: ConfigGenerators{
-			GenDH: repeater("═"),
-			GenHL: repeater("━"),
-			GenLI: literal("┣╸"),
-			GenLL: literal("┗╸"),
+			GenDH: Repeater("═"),
+			GenHL: Repeater("━"),
+			GenSP: Repeater(" "),
+			GenLI: Literal("┣╸"),
+			GenLL: Literal("┗╸"),
 		},
 		ConfigColours: ConfigColours{
 			HC: ansi.ColorFunc("green+b"),
@@ -57,10 +111,11 @@ func Box() Config {
 func Bullet() Config {
 	return Config{
 		ConfigGenerators: ConfigGenerators{
-			GenDH: repeater("—"),
-			GenHL: repeater("–"),
-			GenLI: literal("• "),
-			GenLL: literal("• "),
+			GenDH: Repeater("—"),
+			GenHL: Repeater("–"),
+			GenSP: Repeater(" "),
+			GenLI: Literal("• "),
+			GenLL: Literal("• "),
 		},
 		ConfigColours: ConfigColours{
 			HC: ansi.ColorFunc("green+b"),
@@ -76,10 +131,11 @@ func Bullet() Config {
 func ASCII() Config {
 	return Config{
 		ConfigGenerators: ConfigGenerators{
-			GenDH: repeater("="),
-			GenHL: repeater("-"),
-			GenLI: literal("|-"),
-			GenLL: literal("`-"),
+			GenDH: Repeater("="),
+			GenHL: Repeater("-"),
+			GenSP: Repeater(" "),
+			GenLI: Literal("|-"),
+			GenLL: Literal("`-"),
 		},
 		ConfigColours: ConfigColours{
 			HC: NC,
@@ -148,6 +204,11 @@ func DH(n int, text string) string {
 // HL header line
 func HL(n int, text string) string {
 	return defaultStyle.HL(n, text)
+}
+
+// SP space padding
+func SP(n int, text string) string {
+	return defaultStyle.SP(n, text)
 }
 
 // LI list item

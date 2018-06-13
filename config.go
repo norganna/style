@@ -28,6 +28,8 @@ type ConfigGenerators struct {
 	GenDH NumericStringManipulator
 	// GenHL is the Header Line character sequence.
 	GenHL NumericStringManipulator
+	// GenSP is the Space Padding character sequence.
+	GenSP NumericStringManipulator
 	// GenLI is the List Item character sequence.
 	GenLI StringManipulator
 	// GenLL is the Last List item character sequence.
@@ -106,6 +108,11 @@ func (c *Config) HL(n int, text string) string {
 	return c.LC(c.GenHL(n, text))
 }
 
+// SP space padding
+func (c *Config) SP(n int, text string) string {
+	return c.GenSP(n, text)
+}
+
 // LI list item
 func (c *Config) LI(text string, last bool) string {
 	if last {
@@ -130,19 +137,33 @@ func (c *Config) Style(text string) string {
 			break
 		}
 
-		n, _ := strconv.Atoi(body)
+		var number int
+		var param string
+		split := func() {
+			parts := strings.SplitN(body, ":", 2)
+			if len(parts) > 1 {
+				param = parts[1]
+			}
+			number, _ = strconv.Atoi(parts[0])
+		}
+
 		switch strings.ToUpper(fn) {
-		case "DH", "DHL":
-			body = c.DH(n, body)
-		case "HL", "HR":
-			body = c.HL(n, body)
-		case "LI", "LINE":
+		case "DH", "DHL", "DOUBLE":
+			split()
+			body = c.DH(number, param)
+		case "HL", "HR", "SINGLE":
+			split()
+			body = c.HL(number, param)
+		case "S", "SP", "PAD", "SPACE":
+			split()
+			body = c.SP(number, param)
+		case "LI", "ITEM":
 			body = c.LI(body, false)
-		case "LL", "LLI", "LLINE":
+		case "LL", "LLI", "LAST":
 			body = c.LI(body, true)
 		case "HC", "HEAD":
 			body = c.HC(body)
-		case "L", "LC":
+		case "L", "LC", "LINE":
 			body = c.LC(body)
 		case "B", "BC", "BOLD":
 			body = c.BC(body)

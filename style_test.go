@@ -10,10 +10,11 @@ func fn(name string) func(string) string {
 
 var testConfig = &Config{
 	ConfigGenerators: ConfigGenerators{
-		GenDH: repeater("[DH]"),
-		GenHL: repeater("[HL]"),
-		GenLI: literal("[LI]"),
-		GenLL: literal("[LL]"),
+		GenDH: Repeater("D"),
+		GenHL: Repeater("S"),
+		GenSP: Repeater("_"),
+		GenLI: Literal("I"),
+		GenLL: Literal("L"),
 	},
 	ConfigColours: ConfigColours{
 		HC: fn("HC"),
@@ -27,12 +28,17 @@ var testConfig = &Config{
 func Test_Style(t *testing.T) {
 	testConfig.TagSequence("‹", "›")
 	runTests(t, testConfig, [][2]string{
-		{"‹ test ‹dh:3››", "‹ test LC([DH][DH][DH])›"},
+		{"‹ test ‹dh:3››", "‹ test LC(DDD)›"},
 		{"‹ test ‹bc:test››", "‹ test BC(test)›"},
 		{"‹lc:‹bc:test››", "LC(BC(test))"},
 		{
+			"‹sp:10:<test› ‹sp:10:|test› ‹sp:10:>test› ‹sp:10:test›",
+			"test______ ___test___ ______test test______",
+		},
+		{"‹sp:10:|tests›", "__tests___"},
+		{
 			"‹DH:1›‹HL:1›‹LI›‹LL›‹HC:X›‹LC:X›‹BC:X›‹IC:X›‹EC:X›",
-			"LC([DH])LC([HL])LC([LI])LC([LL])HC(X)LC(X)BC(X)IC(X)EC(X)",
+			"LC(D)LC(S)LC(I)LC(L)HC(X)LC(X)BC(X)IC(X)EC(X)",
 		},
 	})
 }
@@ -40,7 +46,7 @@ func Test_Style(t *testing.T) {
 func Test_TagChars(t *testing.T) {
 	testConfig.TagSequence("X", "Y")
 	runTests(t, testConfig, [][2]string{
-		{"X test Xdh:3YY", "X test LC([DH][DH][DH])Y"},
+		{"X test Xdh:3YY", "X test LC(DDD)Y"},
 		{"X test XBC:How is this?Y Y", "X test BC(How is this?) Y"},
 	})
 }
@@ -57,6 +63,32 @@ func Test_TagSameChars(t *testing.T) {
 	runTests(t, testConfig, [][2]string{
 		{"::BC:test::", "BC(test)"},
 	})
+}
+
+func Test_Repeater(t *testing.T) {
+	r := Repeater("∫")
+
+	tests := []struct {
+		len    int
+		text   string
+		expect string
+	}{
+		{10, "hello", "hello∫∫∫∫∫"},
+		{10, "|hello", "∫∫hello∫∫∫"},
+		{10, ">hello", "∫∫∫∫∫hello"},
+		{10, " hello", "∫hello∫∫∫∫"},
+		{10, "|hello", "∫∫hello∫∫∫"},
+		{10, ">hello ", "∫∫∫∫hello∫"},
+		{10, ">hello world", "hello∫wor…"},
+	}
+
+	for _, test := range tests {
+		got := r(test.len, test.text)
+		if got != test.expect {
+			t.Errorf("Repeated text failed with %dx “%s”, expected “%s”, got “%s”",
+				test.len, test.text, test.expect, got)
+		}
+	}
 }
 
 func runTests(t *testing.T, c *Config, tests [][2]string) {
